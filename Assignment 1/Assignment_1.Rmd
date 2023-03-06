@@ -1,0 +1,92 @@
+---
+title: "Assignment 1"
+author: "Nikhil Reddy Addula"
+date: "2023-03-05"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r}
+#library functions activation.
+library(ISLR)
+library(dplyr)
+library(glmnet)
+library(caret)
+#getting the inbuilt dataset
+attach(Carseats)
+#summarising dataset
+summary(Carseats)
+```
+
+```{r}
+##QB1. Build a Lasso regression model to predict Sales based on all other attributes ("Price", "Advertising", "Population", "Age", "Income" and "Education").  What is the best value of lambda for such a lasso model?##
+#Taking the required attributes.
+Filtered <- Carseats %>% select( "Price", "Advertising", "Population", "Age", "Income", "Education") %>% scale(center = TRUE, scale = TRUE) %>% as.matrix()
+# The input characteristics are converted to matrix format using the glmnet package.
+n <- Filtered
+# The response variable is stored in matrix format as " r ".
+r <- Carseats %>% select("Sales") %>% as.matrix()
+```
+
+
+```{r}
+##QB2. What is the coefficient for the price (normalized) attribute in the best model (i.e. model with the optimal lambda)?##
+# model building
+nr = glmnet(n, r) 
+summary(nr)
+plot(nr)
+print(nr)
+nr_fit <- cv.glmnet(n, r, alpha = 1)
+# minimum lambda value
+min_lambda <- nr_fit$lambda.min
+min_lambda
+plot(nr_fit)
+```
+Hence, based on the data above, we can see that there is only 37.38% variation in the target variable, sales with regularization, and a best lambda value of 0.0043.
+
+```{r}
+##QB3:- How many attributes remain in the model if lambda is set to 0.01? How that number changes if lambda is increased to 0.1? Do you expect more variables to stay in the model (i.e., to have non-zero coefficients) as we increase lambda? ##
+best_m <- glmnet(n, r, alpha = 1, lambda = min_lambda)
+coef(best_m)
+```
+The Price attribute's coefficient with the best lambda value is -1.35384596.
+```{r}
+# Let us look at the coefficients of the characteristics that remain after lambda is set to 0.01.
+best_m <- glmnet(n, r, alpha = 1, lambda = 0.01)
+coef(best_m)
+```
+
+```{r}
+# Let us look at the coefficients of the characteristics that remain after lambda is set to 0.2.
+best_m <- glmnet(n, r, alpha = 1, lambda = 0.2)
+coef(best_m)
+```
+
+```{r}
+# Let us look at the coefficients of the characteristics that remain after lambda is set to 0.3.
+best_m <- glmnet(n, r, alpha = 1, lambda = 0.3)
+coef(best_m)
+```
+When the lambda value is 0.3, we can observe that two of the attribute coefficients are deleted and the independent attributes have shrunk even further.
+
+```{r}
+# Let us look at the coefficients of the characteristics that remain after lambda is set to 0.5.
+best_m <- glmnet(n, r, alpha = 1, lambda = 0.5)
+coef(best_m)
+```
+When the lambda value is 0.5, three of the coefficients of the characteristics are deleted, and the independent attributes have shrunk even further.
+
+
+```{r}
+###QB4. Build an elastic-net model with alpha set to 0.6. What is the best value of lambda for such a model? ###
+# Building an elastic_net model with alpha = 0.6
+elastic = glmnet(n, r, alpha = 0.6)
+plot(elastic, xvar = "lambda")
+plot(cv.glmnet(n, r, alpha = 0.6))
+summary(elastic)
+print(elastic)
+```
+
+The variation in the dependent variable (Sales) is 37.38, which is explained by the supplied characteristics to perform regularization by setting the alpha value to 0.6 and the optimal lambda value is 0.00654.
+
